@@ -1,0 +1,213 @@
+basePath: /
+definitions:
+  models.Board:
+    properties:
+      ladders:
+        additionalProperties:
+          type: integer
+        type: object
+      size:
+        example: 100
+        type: integer
+      snakes:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  models.CreateLobbyRequest:
+    properties:
+      playerName:
+        example: John
+        type: string
+    required:
+    - playerName
+    type: object
+  models.Game:
+    properties:
+      board:
+        $ref: '#/definitions/models.Board'
+      currentTurn:
+        example: 0
+        type: integer
+      gameStatus:
+        allOf:
+        - $ref: '#/definitions/models.GameStatus'
+        example: active
+      id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      players:
+        items:
+          $ref: '#/definitions/models.Player'
+        type: array
+      winner:
+        $ref: '#/definitions/models.Player'
+    type: object
+  models.GameResponse:
+    properties:
+      error:
+        example: Invalid request format
+        type: string
+      game:
+        $ref: '#/definitions/models.Game'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  models.GameStatus:
+    enum:
+    - waiting
+    - active
+    - completed
+    type: string
+    x-enum-varnames:
+    - StatusWaiting
+    - StatusActive
+    - StatusCompleted
+  models.JoinLobbyRequest:
+    properties:
+      lobbyId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      playerName:
+        example: Jane
+        type: string
+    required:
+    - lobbyId
+    - playerName
+    type: object
+  models.Player:
+    properties:
+      id:
+        example: player-123
+        type: string
+      name:
+        example: John
+        type: string
+      position:
+        example: 1
+        type: integer
+    type: object
+  models.RollDiceRequest:
+    properties:
+      gameId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      playerId:
+        example: player-123
+        type: string
+    required:
+    - gameId
+    - playerId
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A RESTful API for playing Snake and Ladder game
+  title: Snake and Ladder Game API
+  version: "1.0"
+paths:
+  /game/{gameId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the current state of a game
+      parameters:
+      - description: Game ID
+        in: path
+        name: gameId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+      summary: Get game status
+      tags:
+      - game
+  /game/roll:
+    post:
+      consumes:
+      - application/json
+      description: Rolls a dice and updates the current player's position
+      parameters:
+      - description: Roll Dice Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RollDiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+      summary: Roll dice for the current player
+      tags:
+      - game
+  /lobby/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new game lobby and returns the lobby ID
+      parameters:
+      - description: Create Lobby Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateLobbyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+      summary: Create a new game lobby
+      tags:
+      - lobby
+  /lobby/join:
+    post:
+      consumes:
+      - application/json
+      description: Allows a player to join an existing lobby using the lobby ID
+      parameters:
+      - description: Join Lobby Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.JoinLobbyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.GameResponse'
+      summary: Join an existing game lobby
+      tags:
+      - lobby
+swagger: "2.0"
